@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   }
 
   const repo = "ikuymark2490-coder/my-project-storage";
-  const filePath = `data/${projectId}.json`;
+  const filePath = `data/${projectId}.html`;
   const apiUrl = `https://api.github.com/repos/${repo}/contents/${filePath}`;
 
   try {
