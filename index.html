@@ -331,15 +331,23 @@
             </div>
 
             <!-- Success State -->
-            <div class="p-12 hidden flex-col items-center justify-center text-center space-y-6" id="launch-success-state">
+            <div class="p-8 hidden flex-col items-center justify-center text-center space-y-6" id="launch-success-state">
                 <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl">✓</div>
                 <div>
                     <h3 class="font-black text-2xl text-green-600">สำเร็จ!</h3>
                     <p class="text-slate-500 text-sm mt-1">โปรเจกต์ของคุณออนไลน์แล้ว</p>
                 </div>
-                <div class="w-full space-y-2">
-                    <button id="view-online-btn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold">เปิดดูผลลัพธ์</button>
-                    <button onclick="closeLaunchModal()" class="w-full py-3 text-slate-400 font-bold text-sm">ปิดหน้าต่างนี้</button>
+                <div class="w-full space-y-4">
+                    <button id="view-online-btn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100">เปิดดูผลลัพธ์</button>
+                    
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center bg-slate-100 p-3 rounded-xl border border-slate-200">
+                            <input type="text" id="share-link-input" readonly class="flex-grow bg-transparent text-xs font-mono outline-none text-slate-600 overflow-hidden" value="">
+                            <button onclick="copyShareLink()" class="ml-2 bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold shrink-0">คัดลอก</button>
+                        </div>
+                    </div>
+
+                    <button onclick="closeLaunchModal()" class="w-full py-2 text-slate-400 font-bold text-sm">ปิดหน้าต่างนี้</button>
                 </div>
             </div>
         </div>
@@ -480,8 +488,13 @@
                 const result = await response.json();
 
                 if(result.success) {
+                    // Update Success UI with link and redirect URL
                     document.getElementById('launch-loading-state').classList.add('hidden');
                     document.getElementById('launch-success-state').classList.remove('hidden');
+                    
+                    const shareInput = document.getElementById('share-link-input');
+                    shareInput.value = result.url;
+                    
                     document.getElementById('view-online-btn').onclick = () => window.open(result.url, '_blank');
                     showNotify("Deploy สำเร็จ! 🚀");
                 } else {
@@ -492,6 +505,13 @@
                 document.getElementById('launch-initial-state').classList.remove('hidden');
                 showNotify("เกิดข้อผิดพลาด: " + err.message);
             }
+        }
+
+        function copyShareLink() {
+            const copyText = document.getElementById('share-link-input');
+            copyText.select();
+            document.execCommand('copy');
+            showNotify("คัดลอกลิงก์แล้ว! 📋");
         }
 
         function buildFullHTML() {
