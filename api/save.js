@@ -45,10 +45,9 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     return res.status(200).json({
-      success: true,
-      url: data.content.html_url,
-      raw: data.content.download_url,
-    });
+  success: true,
+  url: `https://ikuymark2490.github.io/my-project-storage/${filePath}`
+});
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
