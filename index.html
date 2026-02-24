@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Creator Engine V17E</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            touch-action: none;
+            overflow: hidden;
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #main-canvas {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .canvas-item {
+            position: absolute;
+            touch-action: none;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .canvas-item .content-wrap {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border: 4px solid #3b82f6;
+            border-radius: 50%;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .canvas-item.editing {
+            outline: 2.5px solid #3b82f6;
+            outline-offset: 4px;
+            z-index: 9999 !important;
+        }
+        .canvas-item.editing .resize-handle { display: block; }
+
+        .nw { top: -11px; left: -11px; } .ne { top: -11px; right: -11px; }
+        .se { bottom: -11px; right: -11px; } .sw { bottom: -11px; left: -11px; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        #editor-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 3000;
+            height: 85vh;
+            transform: translateY(100%); 
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 2.5rem;
+            border-top-right-radius: 2.5rem;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        }
+        #editor-sheet.active { transform: translateY(0); }
+        #editor-sheet.peek { transform: translateY(calc(85vh - 50px)); } 
+        #editor-sheet.dragging { transition: none; }
+
+        .handle-bar { height: 50px; width: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+        #handle-pill { width: 45px; height: 6px; border-radius: 10px; background-color: rgba(0,0,0,0.15); }
+
+        .code-area { font-family: 'monospace'; background: #1e293b; color: #38bdf8; border-radius: 1.2rem; padding: 1.2rem; width: 100%; min-height: 160px; outline: none; font-size: 13px; line-height: 1.6; border: 1px solid rgba(255,255,255,0.1); }
+        
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-200%); background: #1e293b; color: white; padding: 14px 28px; border-radius: 16px; z-index: 6000; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        .manual-section { background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.25rem; border-radius: 0.5rem 1.5rem 1.5rem 0.5rem; margin-top: 2rem; }
+        
+        .engine-purpose-minimal {
+            margin-top: 4rem;
+            padding-bottom: 3rem;
+            text-align: center;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 3rem;
+        }
+        .purpose-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.3em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+        .purpose-text {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.8;
+            color: #64748b;
+            max-width: 90%;
+            margin: 0 auto;
+            font-style: italic;
+        }
+        .purpose-credit {
+            margin-top: 2.5rem;
+            font-size: 11px;
+            font-weight: 800;
+            color: #cbd5e1;
+            letter-spacing: 0.05em;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .layer-modal-card { width: 100%; max-width: 400px; border-radius: 2.5rem; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+
+        .layer-item { 
+            display: flex; align-items: center; padding: 12px; 
+            background: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(0,0,0,0.05);
+            height: 75px; touch-action: none; transition: all 0.2s;
+        }
+        .layer-item.active { background: rgba(59, 130, 246, 0.15); border: 2px solid #3b82f6; z-index: 10; border-radius: 1rem; margin: 4px; }
+        .layer-item.selected-for-group { border: 2px solid #3b82f6; background: rgba(59, 130, 246, 0.1); border-radius: 1rem; margin: 4px; }
+        
+        .layer-preview {
+            width: 55px; height: 55px; background: white; border-radius: 10px;
+            margin-right: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .layer-preview img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        .layer-drag-handle { padding: 15px; color: #cbd5e1; cursor: grab; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .group-child { position: absolute; pointer-events: none; }
+
+        /* Floating Menu Button */
+        #floating-menu-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: #1e293b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        #floating-menu-btn:active { transform: scale(0.9); }
+
+        /* Right Side Panel */
+        #side-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 80vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            z-index: 5500;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(255,255,255,0.4);
+        }
+        #side-panel.active { transform: translateX(0); }
+        .side-panel-header {
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* ปุ่มไอคอนในเมนู */
+        .menu-icon-btn {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            background: white;
+            color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.2s;
+        }
+        .menu-icon-btn:active { transform: scale(0.9); background: #3b82f6; color: white; }
+
+        /* Loader Animation */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #E2E8F0;
+            border-bottom-color: #3B82F6;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <div id="toast">ข้อความ</div>
+
+    <nav class="fixed top-0 w-full h-16 px-6 flex items-center justify-between z-40 glass-panel border-b border-white/30">
+        <h1 class="font-black text-xl italic tracking-tighter">CREATOR <span class="text-blue-600">V17E</span></h1>
+        <div class="flex gap-2">
+            <button onclick="openLayerModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/60 active:scale-95 transition-all">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            </button>
+            <button onclick="toggleAddModal(true)" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg active:scale-95 transition-all">+ เพิ่ม</button>
+        </div>
+    </nav>
+
+    <div id="main-canvas" onmousedown="globalDeselect(event)" ontouchstart="globalDeselect(event)"></div>
+
+    <!-- Floating Menu Button -->
+    <button id="floating-menu-btn" onclick="toggleSidePanel(true)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <div class="side-panel-header">
+            <h2 class="font-black text-lg">เมนูระบบ</h2>
+            <button onclick="toggleSidePanel(false)" class="w-10 h-10 flex items-center justify-center bg-black/5 rounded-full text-slate-500">✕</button>
+        </div>
+        <div class="p-8 flex-grow overflow-y-auto no-scrollbar">
+            <div id="menu-content">
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="generateExport()" class="menu-icon-btn group" title="Export Code">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    </button>
+                    <!-- ปุ่มจรวด -->
+                    <button onclick="openLaunchModal()" class="menu-icon-btn group" title="Launch Project">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"></path><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Area -->
+            <div id="export-area" class="hidden mt-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black text-blue-600 uppercase">HTML Source Output</span>
+                    <button onclick="copyExportCode()" class="text-xs font-bold bg-slate-800 text-white px-3 py-1 rounded-lg">คัดลอก</button>
+                </div>
+                <textarea id="export-text" readonly class="w-full h-80 bg-slate-900 text-blue-400 p-4 rounded-2xl font-mono text-[9px] outline-none border border-white/10 shadow-inner"></textarea>
+                <button onclick="hideExport()" class="w-full py-3 text-slate-500 font-bold text-sm">ย้อนกลับ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Launch Modal -->
+    <div id="launch-modal" class="modal-overlay" onclick="closeLaunchModal()">
+        <div class="layer-modal-card glass-panel" onclick="event.stopPropagation()">
+            <div class="p-8 space-y-6" id="launch-initial-state">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">🚀</div>
+                    <h2 class="font-black text-2xl">Deploy to Cloud</h2>
+                    <p class="text-slate-500 text-sm font-medium mt-1">บันทึกโปรเจกต์ของคุณลงในฐานข้อมูล GitHub</p>
+                </div>
+                
+                <div class="bg-white/60 p-5 rounded-[2rem] border border-white">
+                    <label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Project Name / ID</label>
+                    <input type="text" id="project-id-input" class="w-full bg-transparent font-black text-xl outline-none placeholder:text-slate-300" placeholder="ตั้งชื่อโปรเจกต์...">
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="startDeployment()" class="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-blue-200 active:scale-95 transition-all">ส่งขึ้น Cloud เลย!</button>
+                    <button onclick="closeLaunchModal()" class="w-full py-3 text-slate-400 font-bold text-sm">ยกเลิก</button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="p-12 hidden flex-col items-center justify-center text-center space-y-6" id="launch-loading-state">
+                <span class="loader"></span>
+                <div>
+                    <h3 class="font-black text-xl">กำลังรวบรวมข้อมูล...</h3>
+                    <p class="text-slate-400 text-sm">กรุณารอเงียบๆ สักครู่</p>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="p-12 hidden flex-col items-center justify-center text-center space-y-6" id="launch-success-state">
+                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl">✓</div>
+                <div>
+                    <h3 class="font-black text-2xl text-green-600">สำเร็จ!</h3>
+                    <p class="text-slate-500 text-sm mt-1">โปรเจกต์ของคุณออนไลน์แล้ว</p>
+                </div>
+                <div class="w-full space-y-2">
+                    <button id="view-online-btn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold">เปิดดูผลลัพธ์</button>
+                    <button onclick="closeLaunchModal()" class="w-full py-3 text-slate-400 font-bold text-sm">ปิดหน้าต่างนี้</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of existing modals... -->
+    <div id="layer-modal" class="modal-overlay" onclick="closeLayerModal()">
+        <div class="layer-modal-card glass-panel" onclick="event.stopPropagation()">
+            <div class="p-6 border-b border-black/5 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <h2 class="font-black text-xl">เลเยอร์</h2>
+                    <button id="group-btn" onclick="mergeSelectedLayers()" class="hidden w-10 h-10 bg-blue-600 text-white rounded-xl items-center justify-center shadow-lg animate-bounce">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                    </button>
+                </div>
+                <button onclick="closeLayerModal()" class="w-8 h-8 flex items-center justify-center bg-black/5 rounded-full text-slate-500">✕</button>
+            </div>
+            <div id="layer-list" class="overflow-y-auto flex-grow p-3 no-scrollbar"></div>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal-overlay" onclick="toggleAddModal(false)">
+        <div class="layer-modal-card glass-panel p-8" onclick="event.stopPropagation()">
+            <h3 class="text-center font-black text-lg mb-6">สร้างวัตถุใหม่</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="triggerFileSelect()" class="flex flex-col items-center gap-3 p-6 rounded-[2rem] bg-white/60 border border-white active:bg-blue-50 transition-all">
+                    <span class="text-3xl">🖼️</span> <span class="font-bold text-sm">รูปภาพ</span>
+                </button>
+                <button onclick="addObject('button')" class="flex flex-col items-center gap-3 p-6 rounded-[2rem] bg-white/60 border border-white active:bg-blue-50 transition-all">
+                    <span class="text-3xl">🔘</span> <span class="font-bold text-sm">ปุ่มกด</span>
+                </button>
+                <button onclick="addObject('text')" class="flex flex-col items-center gap-3 p-6 rounded-[2rem] bg-white/60 border border-white active:bg-blue-50 transition-all">
+                    <span class="text-3xl">🔤</span> <span class="font-bold text-sm">ข้อความ</span>
+                </button>
+                <button onclick="addObject('box')" class="flex flex-col items-center gap-3 p-6 rounded-[2rem] bg-white/60 border border-white active:bg-blue-50 transition-all">
+                    <span class="text-3xl">📦</span> <span class="font-bold text-sm">กล่อง</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="image-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+
+    <div id="editor-sheet" class="glass-panel">
+        <div class="handle-bar" id="sheet-handle"><div id="handle-pill"></div></div>
+        <div class="overflow-y-auto px-8 pb-20 no-scrollbar" id="editor-content">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black">แก้ไขวัสดุ</h2>
+                <button onclick="saveAndCompile()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100">บันทึก</button>
+            </div>
+            <div id="dynamic-properties" class="space-y-6"></div>
+            
+            <div id="manual-container" class="manual-section"></div>
+
+            <button onclick="deleteActiveElement()" class="w-full mt-8 py-5 text-red-500 font-bold bg-red-50/50 rounded-3xl border border-red-100">ลบวัตถุนี้ออกจากโปรเจกต์</button>
+            
+            <div class="engine-purpose-minimal">
+                <span class="purpose-label">Engine Purpose</span>
+                <p class="purpose-text">
+                    "เครื่องมือนี้ถูกสร้างมาเพื่อทลายกำแพงการเขียนโค้ดบนมือถือ ให้ทุกคนสามารถสร้าง Prototype, UI หรือ Logic ของตัวเองได้ง่ายๆ ไม่ว่าจะเป็น Pro ที่ต้องการเทสไอเดียไวๆ หรือ Beginner ที่อยากเริ่มหัดเขียนโปรแกรม จินตนาการของคุณ คือขีดจำกัดเพียงอย่างเดียว"
+                </p>
+                <div class="purpose-credit">
+                    Mobile Creator Engine v17 — Created for Creators
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <script>
+        let elementsData = [];
+        let activeElId = null;
+        let isResizing = false;
+        let isSheetDragging = false; 
+        let startY, initialY;
+        let longPressTimer = null;
+        let selectedLayerIds = new Set();
+        let isSelectionMode = false;
+
+        const canvas = document.getElementById('main-canvas');
+        const sheet = document.getElementById('editor-sheet');
+        const handle = document.getElementById('sheet-handle');
+        const toast = document.getElementById('toast');
+        const sidePanel = document.getElementById('side-panel');
+
+        const manuals = {
+            image: "ใช้สำหรับแสดงผลรูปภาพ รองรับไฟล์ยอดนิยม (.png, .jpg) คุณสามารถปรับขนาดได้โดยดึงจุดมุม และใช้เขียนโค้ดเพื่อเปลี่ยนรูปตามสถานะต่างๆ ได้",
+            button: "วัตถุที่ตอบสนองต่อการคลิก เหมาะสำหรับการสร้าง Interaction เช่น การข้ามหน้าจอ หรือการรันสคริปต์คำนวณ สามารถปรับความโค้งมนและสีให้เข้ากับธีมได้",
+            text: "เลเยอร์ข้อความพื้นฐาน สามารถปรับขนาด Font และสีได้อิสระ รองรับการทำ Dynamic Text ผ่านโค้ด JS โดยใช้ property .innerText",
+            box: "เลเยอร์อเนกประสงค์ ใช้ทำเป็นฉากหลัง (Panel) หรือกรอบตกแต่ง แนะนำให้ปรับ Radius สูงๆ เพื่อความสวยงามแบบ Modern UI",
+            group: "กลุ่มเลเยอร์ (Merged Layer) ทำหน้าที่เป็น Container ที่รวมวัตถุหลายชิ้นเข้าด้วยกัน คุณสามารถเขียนโค้ดเพื่อควบคุมการขยับหรืออนิเมชั่นของชิ้นส่วนข้างในทั้งหมดไปพร้อมๆ กันได้ เหมาะสำหรับสร้างตัวละครหรือปุ่มที่มีความซับซ้อน"
+        };
+
+        function toggleSidePanel(show) { 
+            sidePanel.classList.toggle('active', show); 
+            if(!show) hideExport(); 
+        }
+
+        // --- Launch Project Logic ---
+        function openLaunchModal() {
+            toggleSidePanel(false);
+            const input = document.getElementById('project-id-input');
+            if(!input.value) {
+                const randomId = 'project-' + Math.floor(Math.random() * 9000 + 1000);
+                input.value = randomId;
+            }
+            
+            document.getElementById('launch-initial-state').classList.remove('hidden');
+            document.getElementById('launch-loading-state').classList.add('hidden');
+            document.getElementById('launch-success-state').classList.add('hidden');
+            document.getElementById('launch-modal').classList.add('show');
+        }
+
+        function closeLaunchModal() {
+            document.getElementById('launch-modal').classList.remove('show');
+        }
+
+        async function startDeployment() {
+            const projectId = document.getElementById('project-id-input').value.trim();
+            if(!projectId) { showNotify("กรุณาระบุชื่อโปรเจกต์ ⚠️"); return; }
+
+            // Switch to loading UI
+            document.getElementById('launch-initial-state').classList.add('hidden');
+            document.getElementById('launch-loading-state').classList.remove('hidden');
+
+            // Serialize data
+            const projectData = {
+                timestamp: Date.now(),
+                elements: elementsData
+            };
+            const contentString = JSON.stringify(projectData);
+
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        projectId: projectId,
+                        content: contentString
+                    })
+                });
+
+                const result = await response.json();
+
+                if(result.success) {
+                    document.getElementById('launch-loading-state').classList.add('hidden');
+                    document.getElementById('launch-success-state').classList.remove('hidden');
+                    document.getElementById('view-online-btn').onclick = () => window.open(result.url, '_blank');
+                    showNotify("Deploy สำเร็จ! 🚀");
+                } else {
+                    throw new Error(result.message || "Unknown Error");
+                }
+            } catch (err) {
+                document.getElementById('launch-loading-state').classList.add('hidden');
+                document.getElementById('launch-initial-state').classList.remove('hidden');
+                showNotify("เกิดข้อผิดพลาด: " + err.message);
+            }
+        }
+
+        function generateExport() {
+            const itemsHtml = elementsData.map((d, idx) => {
+                const isImg = d.type === 'image';
+                const isTxt = d.type === 'text';
+                const isGrp = d.type === 'group';
+
+                let inner = d.text;
+                if(isImg) {
+                    inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;">`;
+                } else if(isGrp) {
+                    inner = d.children.map(c => {
+                        const cs = `position:absolute;left:${c.relX}px;top:${c.relY}px;width:${c.w}px;height:${c.h}px;display:flex;align-items:center;justify-content:center;border-radius:${c.radius}px;background-color:${(c.type==='image'||c.type==='text')?'transparent':c.color};font-size:${c.fontSize}px;color:${c.color};overflow:hidden;`;
+                        const cContent = c.type === 'image' ? `<img src="${c.text}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;">` : c.text;
+                        return `<div style="${cs}">${cContent}</div>`;
+                    }).join('');
+                }
+
+                const bgColor = (isImg || isTxt) ? 'transparent' : d.color;
+                const textColor = isTxt ? d.color : (parseInt(d.color.replace('#',''), 16) > 0xffffff/2 ? '#1e293b' : '#fff');
+                
+                const s = `position:absolute;left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px;z-index:${idx+10};background-color:${bgColor};border-radius:${d.radius}px;display:${d.visible?'flex':'none'};align-items:center;justify-content:center;font-size:${d.fontSize}px;color:${textColor};font-weight:bold;font-family:sans-serif;box-shadow:${isImg?'none':'0 10px 30px rgba(0,0,0,0.1)'};overflow:hidden;cursor:pointer;`;
+                
+                return `<div id="${d.id}" style="${s}">${inner}</div>`;
+            }).join('\n    ');
+
+            const scripts = elementsData.filter(d => d.code).map(d => {
+                return `document.getElementById('${d.id}').onclick = function() { \n      ${d.code} \n    };`;
+            }).join('\n    ');
+
+            const fullPageCode = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exported Project</title>
+    <style>
+        body { margin:0; background:#f1f5f9; width:100vw; height:100vh; position:relative; overflow:hidden; }
+        * { box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    ${itemsHtml}
+    <script>
+    ${scripts}
+    <\/script>
+</body>
+</html>`;
+
+            document.getElementById('export-text').value = fullPageCode;
+            document.getElementById('menu-content').classList.add('hidden');
+            document.getElementById('export-area').classList.remove('hidden');
+            showNotify("สร้าง Source Code สำเร็จ! 🚀");
+        }
+
+        function hideExport() {
+            document.getElementById('menu-content').classList.remove('hidden');
+            document.getElementById('export-area').classList.add('hidden');
+        }
+
+        function copyExportCode() {
+            const copyText = document.getElementById('export-text');
+            copyText.select();
+            document.execCommand('copy');
+            showNotify("คัดลอกลงคลิปบอร์ดแล้ว! 📋");
+        }
+
+        function showNotify(msg) {
+            toast.innerText = msg; toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function toggleAddModal(show) { document.getElementById('add-modal').classList.toggle('show', show); }
+        function triggerFileSelect() { document.getElementById('image-input').click(); toggleAddModal(false); }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const tempUrl = URL.createObjectURL(file);
+                addObject('image', tempUrl);
+            }
+        }
+
+        function addObject(type, extra = null) {
+            const id = 'el_' + Date.now();
+            let data = {
+                id, type, 
+                x: 80, y: 150, 
+                w: type === 'text' ? 140 : 180, 
+                h: type === 'text' ? 50 : 80, 
+                text: type === 'image' ? extra : (type === 'box' ? '' : 'วัตถุใหม่'),
+                fontSize: 18, 
+                color: type === 'box' ? '#ffffff' : (type === 'text' ? '#1e293b' : '#3b82f6'), 
+                radius: type === 'button' ? 20 : 8,
+                code: "",
+                visible: true,
+                children: [] 
+            };
+            elementsData.push(data);
+            createDOMElement(data);
+            toggleAddModal(false);
+            enterEditMode(id);
+            openEditor(id);
+            updateZIndexes();
+        }
+
+        function createDOMElement(data) {
+            const el = document.createElement('div');
+            el.id = data.id;
+            el.className = 'canvas-item';
+            
+            const wrap = document.createElement('div');
+            wrap.className = 'content-wrap';
+            
+            if(data.type === 'image') {
+                const img = document.createElement('img');
+                img.src = data.text;
+                img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain';
+                wrap.appendChild(img);
+            } else if(data.type === 'group') {
+                data.children.forEach(child => {
+                    const cEl = document.createElement('div');
+                    cEl.className = 'group-child';
+                    cEl.style.left = child.relX + 'px';
+                    cEl.style.top = child.relY + 'px';
+                    cEl.style.width = child.w + 'px';
+                    cEl.style.height = child.h + 'px';
+                    cEl.style.display = 'flex';
+                    cEl.style.alignItems = 'center';
+                    cEl.style.justifyContent = 'center';
+
+                    if(child.type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = child.text; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='contain';
+                        cEl.appendChild(img);
+                    } else if (child.type === 'text') {
+                        cEl.innerText = child.text;
+                        cEl.style.fontSize = child.fontSize + 'px';
+                        cEl.style.color = child.color;
+                    } else {
+                        cEl.style.borderRadius = child.radius + 'px';
+                        cEl.style.backgroundColor = child.color;
+                        cEl.innerText = child.text;
+                        cEl.style.fontSize = child.fontSize + 'px';
+                        cEl.style.fontWeight = 'bold';
+                        cEl.style.color = (parseInt(child.color.replace('#',''), 16) > 0xffffff/2) ? '#1e293b' : '#fff';
+                    }
+                    wrap.appendChild(cEl);
+                });
+            } else { wrap.innerText = data.text; }
+            
+            el.appendChild(wrap);
+
+            ['nw', 'ne', 'se', 'sw'].forEach(dir => {
+                const h = document.createElement('div');
+                h.className = `resize-handle ${dir}`;
+                h.onpointerdown = (e) => { e.stopPropagation(); startResize(e, data, dir); };
+                el.appendChild(h);
+            });
+
+            updateDOM(data, el);
+
+            let dragStartPos = {x: 0, y: 0};
+            let isMoving = false;
+
+            el.onpointerdown = (e) => {
+                if (isResizing || isSheetDragging) return;
+                e.stopPropagation();
+                dragStartPos = {x: e.clientX - data.x, y: e.clientY - data.y};
+                isMoving = false;
+
+                clearTimeout(longPressTimer);
+                longPressTimer = setTimeout(() => {
+                    if (!isMoving) { 
+                        enterEditMode(data.id); 
+                        openEditor(data.id);
+                        showNotify("โหมดแก้ไข: " + data.type.toUpperCase());
+                    }
+                }, 500);
+
+                const onMove = (me) => {
+                    if (Math.abs(me.clientX - (data.x + dragStartPos.x)) > 5) {
+                        isMoving = true;
+                        clearTimeout(longPressTimer);
+                    }
+                    if (isMoving && activeElId === data.id) {
+                        data.x = me.clientX - dragStartPos.x;
+                        data.y = me.clientY - dragStartPos.y;
+                        updateDOM(data, el);
+                    }
+                };
+                const onUp = () => {
+                    clearTimeout(longPressTimer);
+                    if (!isMoving && activeElId !== data.id) runUserCode(data.id);
+                    window.removeEventListener('pointermove', onMove);
+                    window.removeEventListener('pointerup', onUp);
+                };
+                window.addEventListener('pointermove', onMove);
+                window.addEventListener('pointerup', onUp);
+            };
+
+            canvas.appendChild(el);
+        }
+
+        function updateDOM(data, el) {
+            if(!el) return;
+            el.style.left = data.x + 'px';
+            el.style.top = data.y + 'px';
+            el.style.width = data.w + 'px';
+            el.style.height = data.h + 'px';
+            el.style.borderRadius = data.radius + 'px';
+            el.style.display = data.visible ? 'flex' : 'none';
+            const wrap = el.querySelector('.content-wrap');
+            
+            if(data.type === 'text') {
+                wrap.style.color = data.color; wrap.style.fontSize = data.fontSize + 'px';
+            } else if(data.type === 'group') {
+                el.style.backgroundColor = data.color === '#ffffff' ? 'transparent' : data.color;
+            } else if(data.type !== 'image') {
+                el.style.backgroundColor = data.color;
+                el.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+                wrap.style.color = (parseInt(data.color.replace('#',''), 16) > 0xffffff/2) ? '#1e293b' : '#fff';
+                wrap.style.fontSize = data.fontSize + 'px';
+                wrap.style.fontWeight = '700';
+            }
+        }
+
+        function updateZIndexes() {
+            elementsData.forEach((data, index) => {
+                const el = document.getElementById(data.id);
+                if (el) el.style.zIndex = index + 10;
+            });
+        }
+
+        let sortable = null;
+        function openLayerModal() {
+            isSelectionMode = false;
+            selectedLayerIds.clear();
+            document.getElementById('group-btn').classList.add('hidden');
+            renderLayerList();
+            document.getElementById('layer-modal').classList.add('show');
+            const el = document.getElementById('layer-list');
+            if (sortable) sortable.destroy();
+            sortable = Sortable.create(el, {
+                handle: '.layer-drag-handle',
+                animation: 200,
+                onEnd: function(evt) {
+                    const movedItem = elementsData.splice(elementsData.length - 1 - evt.oldIndex, 1)[0];
+                    elementsData.splice(elementsData.length - evt.newIndex, 0, movedItem);
+                    updateZIndexes();
+                    renderLayerList();
+                }
+            });
+        }
+        function closeLayerModal() { document.getElementById('layer-modal').classList.remove('show'); }
+
+        function renderLayerList() {
+            const list = document.getElementById('layer-list');
+            list.innerHTML = '';
+            [...elementsData].reverse().forEach((data, idx) => {
+                const item = document.createElement('div');
+                const isSelected = selectedLayerIds.has(data.id);
+                item.className = `layer-item ${activeElId === data.id ? 'active' : ''} ${isSelected ? 'selected-for-group' : ''} rounded-2xl mb-2`;
+                
+                item.onpointerdown = (e) => {
+                    longPressTimer = setTimeout(() => {
+                        isSelectionMode = true;
+                        toggleSelectLayer(data.id);
+                    }, 600);
+                };
+                item.onpointerup = () => clearTimeout(longPressTimer);
+
+                item.innerHTML = `
+                    <div class="layer-preview">
+                        ${data.type === 'image' ? `<img src="${data.text}">` : (data.type === 'group' ? '<span>📦</span>' : `<span class="text-[9px] font-black">${data.type}</span>`)}
+                        ${isSelected ? '<div class="absolute inset-0 bg-blue-500/20 flex items-center justify-center text-white">✓</div>' : ''}
+                    </div>
+                    <div class="flex-grow" onclick="handleLayerClick('${data.id}')">
+                        <div class="text-xs font-black uppercase text-slate-500">Layer ${elementsData.length - idx}</div>
+                        <div class="text-sm font-bold truncate w-32">${(data.type === 'image' ? 'Image File' : data.text.substring(0, 20)) || data.type}</div>
+                    </div>
+                    <div class="layer-drag-handle">☰</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function handleLayerClick(id) {
+            if (isSelectionMode) {
+                toggleSelectLayer(id);
+            } else {
+                selectFromLayer(id);
+            }
+        }
+
+        function toggleSelectLayer(id) {
+            if (selectedLayerIds.has(id)) {
+                selectedLayerIds.delete(id);
+            } else {
+                selectedLayerIds.add(id);
+            }
+            
+            if (selectedLayerIds.size > 1) {
+                document.getElementById('group-btn').classList.remove('hidden');
+                document.getElementById('group-btn').classList.add('flex');
+            } else {
+                document.getElementById('group-btn').classList.add('hidden');
+            }
+            
+            if (selectedLayerIds.size === 0) isSelectionMode = false;
+            renderLayerList();
+        }
+
+        function mergeSelectedLayers() {
+            if (selectedLayerIds.size < 2) return;
+            
+            const selectedData = elementsData.filter(d => selectedLayerIds.has(d.id));
+            
+            let minX = Math.min(...selectedData.map(d => d.x));
+            let minY = Math.min(...selectedData.map(d => d.y));
+            let maxX = Math.max(...selectedData.map(d => d.x + d.w));
+            let maxY = Math.max(...selectedData.map(d => d.y + d.h));
+            
+            const newGroup = {
+                id: 'group_' + Date.now(),
+                type: 'group',
+                x: minX,
+                y: minY,
+                w: maxX - minX,
+                h: maxY - minY,
+                text: "กลุ่มวัตถุใหม่",
+                color: "#ffffff",
+                radius: 0,
+                fontSize: 14,
+                code: "",
+                visible: true,
+                children: selectedData.map(d => ({
+                    ...d,
+                    relX: d.x - minX,
+                    relY: d.y - minY
+                }))
+            };
+
+            elementsData = elementsData.filter(d => !selectedLayerIds.has(d.id));
+            elementsData.push(newGroup);
+
+            selectedLayerIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            });
+
+            createDOMElement(newGroup);
+            updateZIndexes();
+            selectedLayerIds.clear();
+            isSelectionMode = false;
+            document.getElementById('group-btn').classList.add('hidden');
+            
+            showNotify("รวมเลเยอร์สำเร็จ! 📦");
+            enterEditMode(newGroup.id);
+            openEditor(newGroup.id);
+            closeLayerModal();
+        }
+
+        function selectFromLayer(id) { enterEditMode(id); openEditor(id); closeLayerModal(); }
+
+        function runUserCode(id) {
+            const data = elementsData.find(d => d.id === id);
+            if (!data || !data.code) return;
+            const el = document.getElementById(id);
+            try {
+                const fn = new Function('showNotify', data.code);
+                fn.call(el, showNotify);
+            } catch(e) { showNotify("Script Error ⚠️"); }
+        }
+
+        function openEditor(id) {
+            activeElId = id;
+            const data = elementsData.find(d => d.id === id);
+            const prop = document.getElementById('dynamic-properties');
+            const manual = document.getElementById('manual-container');
+            
+            sheet.classList.remove('peek');
+            sheet.classList.add('active');
+            
+            let html = `<div class="bg-white/60 p-5 rounded-[2rem] border border-white">
+                <label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Content Name</label>
+                <input type="text" id="edit-text" value="${data.type === 'image' ? 'IMAGE_FILE' : data.text}" ${data.type==='image'?'disabled':''} class="w-full bg-transparent font-black text-xl outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white/60 p-5 rounded-[2rem] border border-white">
+                    <label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">FontSize/Ratio</label>
+                    <input type="number" id="edit-fs" value="${data.fontSize}" class="w-full bg-transparent font-black text-xl outline-none">
+                </div>
+                <div class="bg-white/60 p-5 rounded-[2rem] border border-white">
+                    <label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Theme Color</label>
+                    <input type="color" id="edit-color" value="${data.color}" class="w-full h-8 bg-transparent cursor-pointer">
+                </div>
+            </div>
+            <div class="bg-white/60 p-5 rounded-[2rem] border border-white">
+                <label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Logic Script (JS)</label>
+                <textarea id="edit-code" class="code-area" placeholder="// Example: this.style.opacity = 0.5;">${data.code}</textarea>
+            </div>`;
+            prop.innerHTML = html;
+
+            manual.innerHTML = `
+                <p class="text-[10px] font-black text-blue-500 uppercase mb-2 tracking-widest">คู่มือการใช้งาน: ${data.type}</p>
+                <p class="text-xs font-bold text-slate-600 leading-relaxed">${manuals[data.type]}</p>
+            `;
+        }
+
+        function saveAndCompile() {
+            const data = elementsData.find(d => d.id === activeElId);
+            const dom = document.getElementById(activeElId);
+            if(data.type !== 'image') {
+                data.text = document.getElementById('edit-text').value;
+            }
+            data.fontSize = parseInt(document.getElementById('edit-fs').value);
+            data.color = document.getElementById('edit-color').value;
+            data.code = document.getElementById('edit-code').value;
+            
+            if(data.type !== 'image' && data.type !== 'group') {
+                dom.querySelector('.content-wrap').innerText = data.text;
+            }
+            updateDOM(data, dom);
+            sheet.classList.remove('active', 'peek');
+            dom.classList.remove('editing');
+            activeElId = null;
+            showNotify("Compiled Successfully! ✅");
+        }
+
+        function deleteActiveElement() {
+            document.getElementById(activeElId).remove();
+            elementsData = elementsData.filter(d => d.id !== activeElId);
+            sheet.classList.remove('active', 'peek');
+            activeElId = null;
+        }
+
+        function globalDeselect(e) {
+            if (e.target === canvas) {
+                document.querySelectorAll('.canvas-item').forEach(el => el.classList.remove('editing'));
+                activeElId = null;
+                sheet.classList.remove('active', 'peek');
+            }
+        }
+
+        function startResize(e, data, dir) {
+            isResizing = true;
+            const sX = e.clientX, sY = e.clientY, sW = data.w, sH = data.h;
+            const onRM = (me) => {
+                if (dir.includes('e')) data.w = Math.max(30, sW + (me.clientX - sX));
+                if (dir.includes('s')) data.h = Math.max(20, sH + (me.clientY - sY));
+                updateDOM(data, document.getElementById(data.id));
+            };
+            const onRE = () => { isResizing = false; window.removeEventListener('pointermove', onRM); };
+            window.addEventListener('pointermove', onRM);
+            window.addEventListener('pointerup', onRE, {once: true});
+        }
+
+        function enterEditMode(id) {
+            document.querySelectorAll('.canvas-item').forEach(el => el.classList.remove('editing'));
+            const el = document.getElementById(id);
+            if(el) { el.classList.add('editing'); activeElId = id; }
+        }
+
+        handle.ontouchstart = (e) => { 
+            startY = e.touches[0].clientY; 
+            sheet.classList.add('dragging'); 
+            isSheetDragging = true; 
+            const transform = window.getComputedStyle(sheet).getPropertyValue('transform');
+            initialY = (transform !== 'none') ? parseFloat(transform.split(',')[5]) : 0;
+        };
+        
+        window.ontouchmove = (e) => {
+            if (!isSheetDragging) return;
+            const deltaY = e.touches[0].clientY - startY;
+            let newY = initialY + deltaY;
+            if (newY < 0) newY = 0; 
+            sheet.style.transform = `translateY(${newY}px)`;
+        };
+        
+        window.ontouchend = () => {
+            if (!isSheetDragging) return;
+            isSheetDragging = false;
+            sheet.classList.remove('dragging');
+            const transform = window.getComputedStyle(sheet).getPropertyValue('transform');
+            const finalY = (transform !== 'none') ? parseFloat(transform.split(',')[5]) : 0;
+            
+            sheet.style.transform = ''; 
+
+            if (finalY > 150) {
+                sheet.classList.remove('active');
+                sheet.classList.add('peek');
+            } else {
+                sheet.classList.add('active');
+                sheet.classList.remove('peek');
+            }
+        };
+    </script>
+</body>
+</html>
+
