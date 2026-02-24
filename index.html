@@ -466,13 +466,7 @@
             document.getElementById('launch-initial-state').classList.add('hidden');
             document.getElementById('launch-loading-state').classList.remove('hidden');
 
-            // Serialize data
-            const projectData = {
-                timestamp: Date.now(),
-                elements: elementsData
-            };
-            const contentString = JSON.stringify(projectData);
-
+            const contentString = buildFullHTML();
             try {
                 const response = await fetch('/api/save', {
                     method: 'POST',
@@ -498,6 +492,57 @@
                 document.getElementById('launch-initial-state').classList.remove('hidden');
                 showNotify("เกิดข้อผิดพลาด: " + err.message);
             }
+        }
+
+        function buildFullHTML() {
+
+    const itemsHtml = elementsData.map((d, idx) => {
+        const isImg = d.type === 'image';
+        const isTxt = d.type === 'text';
+        const isGrp = d.type === 'group';
+
+        let inner = d.text;
+        if(isImg) {
+            inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;">`;
+        }
+
+        const bgColor = (isImg || isTxt) ? 'transparent' : d.color;
+
+        const s = `
+        position:absolute;
+        left:${d.x}px;
+        top:${d.y}px;
+        width:${d.w}px;
+        height:${d.h}px;
+        background-color:${bgColor};
+        border-radius:${d.radius}px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:${d.fontSize}px;
+        color:${d.color};
+        font-weight:bold;
+        `;
+
+        return `<div style="${s}">${inner}</div>`;
+    }).join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exported</title>
+<style>
+body { margin:0; background:#f1f5f9; position:relative; }
+</style>
+</head>
+<body>
+${itemsHtml}
+</body>
+</html>
+`;
         }
 
         function generateExport() {
