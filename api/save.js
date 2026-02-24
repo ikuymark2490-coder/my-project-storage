@@ -3,38 +3,54 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { content } = req.body;
-  const token = process.env.GITHUB_TOKEN;
-  const url = "https://api.github.com/repos/ikuymark2490-coder/my-project-storage/contents/data/data.json";
+  const { projectId, content } = req.body;
 
-  // 1️⃣ เช็คไฟล์ก่อน
-  const getFile = await fetch(url, {
-    headers: {
-      Authorization: `token ${token}`,
-    },
-  });
-
-  let sha = null;
-
-  if (getFile.status === 200) {
-    const fileData = await getFile.json();
-    sha = fileData.sha;
+  if (!projectId || !content) {
+    return res.status(400).json({ message: "Missing projectId or content" });
   }
 
-  // 2️⃣ สร้างหรือเขียนทับ
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Authorization: `token ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: "update data",
-      content: Buffer.from(content).toString("base64"),
-      sha: sha || undefined,
-    }),
-  });
+  const repo = "ikuymark2490-coder/my-project-storage";
+  const filePath = `data/${projectId}.json`;
+  const apiUrl = `https://api.github.com/repos/${repo}/contents/${filePath}`;
 
-  const data = await response.json();
-  res.status(200).json(data);
+  try {
+    // 1️⃣ เช็คว่าไฟล์มีอยู่ไหม
+    const checkFile = await fetch(apiUrl, {
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+    });
+
+    let sha = null;
+
+    if (checkFile.status === 200) {
+      const existingFile = await checkFile.json();
+      sha = existingFile.sha;
+    }
+
+    // 2️⃣ สร้างหรือเขียนทับ
+    const response = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: "save project data",
+        content: Buffer.from(content).toString("base64"),
+        sha: sha || undefined,
+      }),
+    });
+
+    const data = await response.json();
+
+    return res.status(200).json({
+      success: true,
+      url: data.content.html_url,
+      raw: data.content.download_url,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 }
