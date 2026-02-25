@@ -962,8 +962,13 @@
             const data = elementsData.find(d => d.id === activeElId);
             const dom = document.getElementById(activeElId);
             if(data.type !== 'image') {
-                data.text = document.getElementById('edit-text').value;
-            }
+    const newText = document.getElementById('edit-text').value.trim();
+
+    // ถ้าไม่กรอกอะไรเลย อย่าไปล้างค่าของเดิม
+    if(newText !== "") {
+        data.text = newText;
+    }
+                }
             data.fontSize = parseInt(document.getElementById('edit-fs').value);
             data.color = document.getElementById('edit-color').value;
             data.code = document.getElementById('edit-code').value;
