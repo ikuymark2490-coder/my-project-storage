@@ -431,7 +431,8 @@
         let longPressTimer = null;
         let selectedLayerIds = new Set();
         let isSelectionMode = false;
-
+        
+        const isBtn = d.type === 'button';
         const canvas = document.getElementById('main-canvas');
         const sheet = document.getElementById('editor-sheet');
         const handle = document.getElementById('sheet-handle');
@@ -585,7 +586,11 @@
                 const bgColor = (isImg || isTxt) ? 'transparent' : d.color;
                 const s = `position:absolute;left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px;background-color:${bgColor};border-radius:${d.radius}px;display:flex;align-items:center;justify-content:center;font-size:${d.fontSize}px;color:${d.color};font-weight:bold;overflow:hidden;`;
 
-                return `<div id="${d.id}" style="${s}">${inner}</div>`;
+                if (isBtn) {
+    return `<button id="${d.id}" style="${s}border:none;cursor:pointer;">${inner}</button>`;
+} else {
+    return `<div id="${d.id}" style="${s}">${inner}</div>`;
+                }
             }).join('');
 
             const scripts = elementsData.filter(d => d.code).map(d => {
