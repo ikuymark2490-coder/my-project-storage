@@ -305,7 +305,9 @@
         <div class="layer-modal-card glass-panel" onclick="event.stopPropagation()">
             <div class="p-8 space-y-6" id="launch-initial-state">
                 <div class="text-center">
-                    <div class="text-5xl mb-4">🚀</div>
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path></svg>
+                    </div>
                     <h2 class="font-black text-2xl">Deploy to Cloud</h2>
                     <p class="text-slate-500 text-sm font-medium mt-1">บันทึกโปรเจกต์ของคุณลงในฐานข้อมูล GitHub</p>
                 </div>
@@ -325,14 +327,16 @@
             <div class="p-12 hidden flex-col items-center justify-center text-center space-y-6" id="launch-loading-state">
                 <span class="loader"></span>
                 <div>
-                    <h3 class="font-black text-xl">กำลังรวบรวมข้อมูล...</h3>
-                    <p class="text-slate-400 text-sm">กรุณารอเงียบๆ สักครู่</p>
+                    <h3 id="deploy-step-title" class="font-black text-xl">กำลังเริ่มต้น...</h3>
+                    <p id="deploy-step-desc" class="text-slate-400 text-sm">กรุณารอสักครู่</p>
                 </div>
             </div>
 
             <!-- Success State -->
             <div class="p-8 hidden flex-col items-center justify-center text-center space-y-6" id="launch-success-state">
-                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl">✓</div>
+                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
                 <div>
                     <h3 class="font-black text-2xl text-green-600">สำเร็จ!</h3>
                     <p class="text-slate-500 text-sm mt-1">โปรเจกต์ของคุณออนไลน์แล้ว</p>
@@ -447,6 +451,29 @@
             if(!show) hideExport(); 
         }
 
+        // --- Deployment Steps Functions ---
+        function updateDeployStep(title, desc) {
+            document.getElementById('deploy-step-title').innerText = title;
+            document.getElementById('deploy-step-desc').innerText = desc;
+        }
+
+        async function waitForSiteReady(url, timeout = 60000) {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                try {
+                    // ใช้ HEAD request เพื่อเช็ค status code โดยไม่โหลดเนื้อหาทั้งหมด
+                    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                    if (res.status === 200) {
+                        return true;
+                    }
+                } catch (e) {
+                    // Catch errors (like CORS or network errors) and retry
+                }
+                await new Promise(r => setTimeout(r, 5000)); // เช็คทุก 5 วินาที
+            }
+            return false;
+        }
+
         // --- Launch Project Logic ---
         function openLaunchModal() {
             toggleSidePanel(false);
@@ -473,6 +500,7 @@
             // Switch to loading UI
             document.getElementById('launch-initial-state').classList.add('hidden');
             document.getElementById('launch-loading-state').classList.remove('hidden');
+            updateDeployStep("กำลังรวบรวมข้อมูล...", "กรุณารอสักครู่");
 
             const contentString = buildFullHTML();
             try {
@@ -488,20 +516,37 @@
                 const result = await response.json();
 
                 if(result.success) {
-                    // Update Success UI with link and redirect URL
+                    // เริ่มขั้นตอนลำดับสถานะ (Deployment Sequence)
+                    updateDeployStep("กำลังสร้างไฟล์...", "กำลังบันทึกขึ้น GitHub");
+                    await new Promise(r => setTimeout(r, 1000));
+
+                    updateDeployStep("สร้างไฟล์สำเร็จ ✅", "กำลังสร้างลิงก์...");
+                    await new Promise(r => setTimeout(r, 1000));
+
+                    const fixedUrl = `https://ikuymark2490-coder.github.io/my-project-storage/data/${projectId}.html`;
+
+                    updateDeployStep("สร้างลิงก์สำเร็จ ✅", "กำลังเช็คลิงก์...");
+                    
+                    const ready = await waitForSiteReady(fixedUrl);
+
+                    if(!ready){
+                        throw new Error("เว็บยังไม่พร้อมหลังรอครบเวลา (Timeout)");
+                    }
+
+                    updateDeployStep("สำเร็จแล้ว 🎉", "เว็บไซต์ออนไลน์แล้ว");
+                    await new Promise(r => setTimeout(r, 500));
+
+                    // แสดงหน้า Success
                     document.getElementById('launch-loading-state').classList.add('hidden');
                     document.getElementById('launch-success-state').classList.remove('hidden');
                     
                     const shareInput = document.getElementById('share-link-input');
+                    shareInput.value = fixedUrl;
 
-// สร้าง URL ที่ถูกต้องเอง ไม่ใช้ result.url
-const fixedUrl = `https://ikuymark2490-coder.github.io/my-project-storage/data/${projectId}.html`;
-
-shareInput.value = fixedUrl;
-
-document.getElementById('view-online-btn').onclick = () => {
-    window.open(fixedUrl, '_blank');
-};
+                    document.getElementById('view-online-btn').onclick = () => {
+                        window.open(fixedUrl, '_blank');
+                    };
+                    
                     showNotify("Deploy สำเร็จ! 🚀");
                 } else {
                     throw new Error(result.message || "Unknown Error");
@@ -521,57 +566,6 @@ document.getElementById('view-online-btn').onclick = () => {
         }
 
         function buildFullHTML() {
-
-    const itemsHtml = elementsData.map((d, idx) => {
-        const isImg = d.type === 'image';
-        const isTxt = d.type === 'text';
-        const isGrp = d.type === 'group';
-
-        let inner = d.text;
-        if(isImg) {
-            inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;">`;
-        }
-
-        const bgColor = (isImg || isTxt) ? 'transparent' : d.color;
-
-        const s = `
-        position:absolute;
-        left:${d.x}px;
-        top:${d.y}px;
-        width:${d.w}px;
-        height:${d.h}px;
-        background-color:${bgColor};
-        border-radius:${d.radius}px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:${d.fontSize}px;
-        color:${d.color};
-        font-weight:bold;
-        `;
-
-        return `<div style="${s}">${inner}</div>`;
-    }).join('');
-
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exported</title>
-<style>
-body { margin:0; background:#f1f5f9; position:relative; }
-</style>
-</head>
-<body>
-${itemsHtml}
-</body>
-</html>
-`;
-        }
-
-        function generateExport() {
             const itemsHtml = elementsData.map((d, idx) => {
                 const isImg = d.type === 'image';
                 const isTxt = d.type === 'text';
@@ -579,46 +573,30 @@ ${itemsHtml}
 
                 let inner = d.text;
                 if(isImg) {
-                    inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;">`;
+                    inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;">`;
                 } else if(isGrp) {
                     inner = d.children.map(c => {
                         const cs = `position:absolute;left:${c.relX}px;top:${c.relY}px;width:${c.w}px;height:${c.h}px;display:flex;align-items:center;justify-content:center;border-radius:${c.radius}px;background-color:${(c.type==='image'||c.type==='text')?'transparent':c.color};font-size:${c.fontSize}px;color:${c.color};overflow:hidden;`;
-                        const cContent = c.type === 'image' ? `<img src="${c.text}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;">` : c.text;
+                        const cContent = c.type === 'image' ? `<img src="${c.text}" style="width:100%;height:100%;object-fit:contain;">` : c.text;
                         return `<div style="${cs}">${cContent}</div>`;
                     }).join('');
                 }
 
                 const bgColor = (isImg || isTxt) ? 'transparent' : d.color;
-                const textColor = isTxt ? d.color : (parseInt(d.color.replace('#',''), 16) > 0xffffff/2 ? '#1e293b' : '#fff');
-                
-                const s = `position:absolute;left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px;z-index:${idx+10};background-color:${bgColor};border-radius:${d.radius}px;display:${d.visible?'flex':'none'};align-items:center;justify-content:center;font-size:${d.fontSize}px;color:${textColor};font-weight:bold;font-family:sans-serif;box-shadow:${isImg?'none':'0 10px 30px rgba(0,0,0,0.1)'};overflow:hidden;cursor:pointer;`;
-                
+                const s = `position:absolute;left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px;background-color:${bgColor};border-radius:${d.radius}px;display:flex;align-items:center;justify-content:center;font-size:${d.fontSize}px;color:${d.color};font-weight:bold;overflow:hidden;`;
+
                 return `<div id="${d.id}" style="${s}">${inner}</div>`;
-            }).join('\n    ');
+            }).join('');
 
             const scripts = elementsData.filter(d => d.code).map(d => {
-                return `document.getElementById('${d.id}').onclick = function() { \n      ${d.code} \n    };`;
-            }).join('\n    ');
+                return `document.getElementById('${d.id}').onclick = function() { ${d.code} };`;
+            }).join('\n');
 
-            const fullPageCode = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exported Project</title>
-    <style>
-        body { margin:0; background:#f1f5f9; width:100vw; height:100vh; position:relative; overflow:hidden; }
-        * { box-sizing: border-box; }
-    </style>
-</head>
-<body>
-    ${itemsHtml}
-    <script>
-    ${scripts}
-    <\/script>
-</body>
-</html>`;
+            return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Project</title><style>body{margin:0;background:#f1f5f9;overflow:hidden;width:100vw;height:100vh;position:relative;}</style></head><body>${itemsHtml}<script>${scripts}<\/script></body></html>`;
+        }
 
+        function generateExport() {
+            const fullPageCode = buildFullHTML();
             document.getElementById('export-text').value = fullPageCode;
             document.getElementById('menu-content').classList.add('hidden');
             document.getElementById('export-area').classList.remove('hidden');
@@ -1042,9 +1020,9 @@ ${itemsHtml}
             initialY = (transform !== 'none') ? parseFloat(transform.split(',')[5]) : 0;
         };
         
-        window.ontouchmove = (e) => {
+        window.ontouchmove = (me) => {
             if (!isSheetDragging) return;
-            const deltaY = e.touches[0].clientY - startY;
+            const deltaY = me.touches[0].clientY - startY;
             let newY = initialY + deltaY;
             if (newY < 0) newY = 0; 
             sheet.style.transform = `translateY(${newY}px)`;
