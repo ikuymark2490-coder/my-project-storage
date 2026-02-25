@@ -493,9 +493,15 @@
                     document.getElementById('launch-success-state').classList.remove('hidden');
                     
                     const shareInput = document.getElementById('share-link-input');
-                    shareInput.value = result.url;
-                    
-                    document.getElementById('view-online-btn').onclick = () => window.open(result.url, '_blank');
+
+// สร้าง URL ที่ถูกต้องเอง ไม่ใช้ result.url
+const fixedUrl = `https://ikuymark2490-coder.github.io/my-project-storage/data/${projectId}.html`;
+
+shareInput.value = fixedUrl;
+
+document.getElementById('view-online-btn').onclick = () => {
+    window.open(fixedUrl, '_blank');
+};
                     showNotify("Deploy สำเร็จ! 🚀");
                 } else {
                     throw new Error(result.message || "Unknown Error");
