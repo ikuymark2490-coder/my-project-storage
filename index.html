@@ -572,7 +572,7 @@
                 const isGrp = d.type === 'group';
                 const isBtn = d.type === 'button';
 
-                let inner = d.text;
+                let inner = d.text || '';
                 if(isImg) {
                     inner = `<img src="${d.text}" style="width:100%;height:100%;object-fit:contain;">`;
                 } else if(isGrp) {
@@ -969,10 +969,7 @@
             if(data.type !== 'image') {
     const newText = document.getElementById('edit-text').value.trim();
 
-    // ถ้าไม่กรอกอะไรเลย อย่าไปล้างค่าของเดิม
-    if(newText !== "") {
-        data.text = newText;
-    }
+    data.text = newText;
                 }
             data.fontSize = parseInt(document.getElementById('edit-fs').value);
             data.color = document.getElementById('edit-color').value;
