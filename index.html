@@ -458,20 +458,25 @@
         }
 
         async function waitForSiteReady(url, timeout = 60000) {
-            const start = Date.now();
-            while (Date.now() - start < timeout) {
-                try {
-                    // ใช้ HEAD request เพื่อเช็ค status code โดยไม่โหลดเนื้อหาทั้งหมด
-                    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-                    if (res.status === 200) {
-                        return true;
-                    }
-                } catch (e) {
-                    // Catch errors (like CORS or network errors) and retry
+    const start = Date.now();
+
+    while (Date.now() - start < timeout) {
+        try {
+            const res = await fetch(url, { cache: 'no-store' });
+
+            if (res.status === 200) {
+                const text = await res.text();
+
+                if (!text.includes("404")) {
+                    return true;
                 }
-                await new Promise(r => setTimeout(r, 5000)); // เช็คทุก 5 วินาที
             }
-            return false;
+        } catch (e) {}
+
+        await new Promise(r => setTimeout(r, 4000));
+    }
+
+    return false;
         }
 
         // --- Launch Project Logic ---
