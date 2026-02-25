@@ -432,7 +432,6 @@
         let selectedLayerIds = new Set();
         let isSelectionMode = false;
         
-        const isBtn = d.type === 'button';
         const canvas = document.getElementById('main-canvas');
         const sheet = document.getElementById('editor-sheet');
         const handle = document.getElementById('sheet-handle');
@@ -571,6 +570,7 @@
                 const isImg = d.type === 'image';
                 const isTxt = d.type === 'text';
                 const isGrp = d.type === 'group';
+                const isBtn = d.type === 'button';
 
                 let inner = d.text;
                 if(isImg) {
