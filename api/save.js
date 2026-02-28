@@ -3,11 +3,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { projectId, content } = req.body;
+  const { projectId, content, images = [] } = req.body;
 
-  if (!projectId || !content) {
+if (!projectId || !content) {
     return res.status(400).json({ message: "Missing projectId or content" });
-  }
+}
 
   const repo = "ikuymark2490-coder/my-project-storage";
   const filePath = `data/${projectId}.html`;
@@ -44,12 +44,41 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    return res.status(200).json({
-  success: true,
-  url: `https://ikuymark2490.github.io/my-project-storage/${filePath}`
+    // อัพโหลดรูปแต่ละไฟล์ไปใน images/
+for (const img of images) {
+    const imgPath = `data/images/${img.fileName}`;
+    const imgApiUrl = `https://api.github.com/repos/${repo}/contents/${imgPath}`;
+    
+    // เช็คว่ามีไฟล์อยู่แล้วไหม
+    const checkImg = await fetch(imgApiUrl, {
+        headers: { Authorization: `token ${process.env.GITHUB_TOKEN}` }
+    });
+    let imgSha = null;
+    if (checkImg.status === 200) {
+        const existing = await checkImg.json();
+        imgSha = existing.sha;
+    }
+    
+    await fetch(imgApiUrl, {
+        method: 'PUT',
+        headers: {
+            Authorization: `token ${process.env.GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message: `upload image ${img.fileName}`,
+            content: img.base64,
+            sha: imgSha || undefined
+        })
+    });
+}
+
+return res.status(200).json({
+    success: true,
+    url: `https://ikuymark2490-coder.github.io/my-project-storage/data/${projectId}.html`
 });
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-}
+    }
