@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Kanit',sans-serif;}
+
+body{
+  background:
+    radial-gradient(circle at 20% 10%, rgba(47,109,224,.15), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(47,109,224,.12), transparent 40%),
+    linear-gradient(180deg,#f4f8ff,#eaf1ff);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+}
+
+.header{width:100%; padding:30px 20px 10px 20px;}
+.brand{display:flex; justify-content:space-between; align-items:center;}
+.left-brand{display:flex; align-items:center; gap:12px;}
+.creator-box{background:#2f6de0; padding:8px 20px; transform:skewX(-15deg);}
+.creator-box span{display:inline-block; transform:skewX(15deg); color:#fff; font-weight:800; font-size:28px;}
+.version{font-size:28px; font-weight:800; color:#2f6de0;}
+
+.card{
+  margin-top:40px; width:90%; max-width:400px; padding:35px 28px; border-radius:30px; color:white;
+  background: linear-gradient(180deg,#4f7fe8,#3e6fd9);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px); position:relative; overflow:hidden;
+  animation:floatUp .6s ease; border:1px solid rgba(255,255,255,.3);
+}
+
+.card h2{text-align:center; margin-bottom:25px; font-size:28px;}
+
+/* Input Styles */
+.input-group{margin-bottom:18px; position: relative;}
+.input-group label{font-size:15px; font-weight: 600;}
+.input-group input{
+  width:100%; padding:14px 16px; border:none; border-radius:14px; margin-top:8px;
+  background:rgba(255,255,255,0.18); color:white; font-size:15px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.25); outline:none; transition:.25s ease;
+}
+
+.input-group input:focus{
+  background:rgba(255,255,255,0.25);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.4);
+}
+
+/* ปุ่มลูกตา - ปรับตำแหน่งที่นี่ */
+.eye-btn {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  /* >>> ปรับตัวเลข +4px ตรงนี้เพื่อขยับขึ้น/ลง <<< */
+  transform: translateY(calc(-50% + 5px)); 
+  cursor: pointer;
+  opacity: 0.7;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+.eye-btn:hover { opacity: 1; }
+.eye-btn svg { width: 22px; height: 22px; fill: white; }
+
+/* Error Styles */
+.error {
+  color: #ff4d4d; font-size: 13px; margin-top: 6px; font-weight: 600;
+  min-height: 18px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.input-error {
+  border: 2px solid #ff4d4d !important;
+  background: rgba(255, 77, 77, 0.1) !important;
+}
+
+.main-btn{
+  width:100%; padding:16px; border:none; border-radius:20px;
+  background:linear-gradient(90deg,#1e55d8,#3f7bff);
+  color:white; font-size:18px; font-weight:700; margin-top:20px;
+  cursor:pointer; box-shadow: 0 12px 30px rgba(30,85,216,.35);
+  transition:.25s ease; position:relative; overflow:hidden;
+}
+.main-btn:hover{ transform:translateY(-3px); box-shadow:0 15px 35px rgba(0,0,0,0.35); }
+
+.switch-link{text-align:center; margin-top:20px; text-decoration:underline; cursor:pointer;}
+
+/* Home Icon */
+.home-inline{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.home-inline svg{ width:28px; height:28px; fill:#2f6de0; }
+
+/* Loader */
+.pro-loader{ position:fixed; inset:0; background:radial-gradient(circle at center,#1d3fa8,#0f1b3d); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s ease; z-index:9999; }
+.pro-loader.active{ opacity:1; pointer-events:all; }
+.pro-box{ width:280px; text-align:center; color:white; }
+.pro-logo{ font-size:28px; font-weight:800; letter-spacing:4px; margin-bottom:30px; }
+.progress{ width:100%; height:10px; background:rgba(255,255,255,.2); border-radius:20px; overflow:hidden; }
+.progress-bar{ width:0%; height:100%; background:linear-gradient(90deg,#00c6ff,#2f6de0); transition:width .15s linear; }
+.percent{ margin-top:12px; font-size:14px; opacity:.8; }
+
+@keyframes floatUp{ from{transform:translateY(40px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="left-brand">
+      <div class="creator-box"><span>CREATOR</span></div>
+      <div class="version">V17E</div>
+    </div>
+    <div class="home-inline" onclick="goHome()">
+      <svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>เข้าสู่ระบบ</h2>
+
+  <div class="input-group">
+    <label>ชื่อผู้ใช้</label>
+    <input id="username" type="text" placeholder="กรอกชื่อผู้ใช้">
+    <div id="userError" class="error"></div>
+  </div>
+
+  <div class="input-group">
+    <label>รหัสผ่าน</label>
+    <input id="password" type="password" placeholder="กรอกรหัสผ่าน">
+    <div class="eye-btn" onclick="togglePass('password', this)">
+      <svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+    </div>
+    <div id="passError" class="error"></div>
+  </div>
+
+  <div class="input-group">
+    <label>อีเมล</label>
+    <input id="email" type="email" placeholder="กรอกอีเมล">
+    <div id="emailError" class="error"></div>
+  </div>
+
+  <button class="main-btn" onclick="login()">เข้าสู่ระบบ</button>
+  <div class="switch-link" onclick="goRegister()">สมัครสมาชิก</div>
+</div>
+
+<div class="pro-loader" id="loader">
+  <div class="pro-box">
+    <div class="pro-logo">CREATOR</div>
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="percent" id="percent">0%</div>
+  </div>
+</div>
+
+<script>
+// ฟังก์ชัน เปิด-ปิด ตา
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  
+  if (isPassword) {
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+  } else {
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
+  }
+}
+
+function login() {
+  const userInp = document.getElementById("username");
+  const passInp = document.getElementById("password");
+  const mailInp = document.getElementById("email");
+
+  const userErr = document.getElementById("userError");
+  const passErr = document.getElementById("passError");
+  const mailErr = document.getElementById("emailError");
+
+  // 1. ล้างสถานะ Error เก่า
+  [userInp, passInp, mailInp].forEach(i => i.classList.remove("input-error"));
+  userErr.innerText = ""; passErr.innerText = ""; mailErr.innerText = "";
+
+  const stored = JSON.parse(localStorage.getItem("creatorUser"));
+  let hasError = false;
+
+  // 2. เช็คว่ากรอกข้อมูลครบไหม (Validation)
+  if (userInp.value.trim() === "") {
+    userErr.innerText = "✖ กรุณากรอกชื่อผู้ใช้";
+    userInp.classList.add("input-error");
+    hasError = true;
+  }
+  if (passInp.value.trim() === "") {
+    passErr.innerText = "✖ กรุณากรอกรหัสผ่าน";
+    passInp.classList.add("input-error");
+    hasError = true;
+  }
+  // (ถ้าจะใช้ Email ด้วย)
+  if (mailInp.value.trim() === "") {
+    mailErr.innerText = "✖ กรุณากรอกอีเมล";
+    mailInp.classList.add("input-error");
+    hasError = true;
+  }
+
+  if (hasError) return; // ถ้ากรอกไม่ครบ ไม่ต้องทำต่อ
+
+  // 3. เช็คว่ามีข้อมูลในระบบไหม
+  if (!stored) {
+    userErr.innerText = "✖ ไม่พบข้อมูลบัญชีในระบบ";
+    return;
+  }
+
+  // 4. ตรวจสอบความถูกต้อง (Login Match)
+  // เพิ่มการเช็ค email เข้าไปด้วยเพื่อให้ตรงกับหน้า UI
+  if (userInp.value.trim() === stored.username && 
+      passInp.value === stored.password && 
+      mailInp.value.trim() === stored.email) {
+    
+    localStorage.setItem("isLoggedIn", "true");
+    startLoading("index.html");
+  } else {
+    // แจ้งเตือนกรณีข้อมูลไม่ตรง
+    passErr.innerText = "✖ ข้อมูลเข้าสู่ระบบไม่ถูกต้อง";
+    [userInp, passInp, mailInp].forEach(i => i.classList.add("input-error"));
+  }
+}
+
+
+function startLoading(target){
+  const loader = document.getElementById("loader");
+  const bar = document.getElementById("progressBar");
+  const percent = document.getElementById("percent");
+  loader.classList.add("active");
+  let val = 0;
+  const inv = setInterval(() => {
+    val += Math.floor(Math.random()*15)+5;
+    if(val >= 100){
+      val = 100; clearInterval(inv);
+      setTimeout(() => { location.href = target; }, 400);
+    }
+    bar.style.width = val + "%";
+    percent.innerText = val + "%";
+  }, 100);
+}
+
+function goRegister(){ startLoading("register.html"); }
+function goHome(){ startLoading("index.html"); }
+</script>
+
+</body>
+</html>
