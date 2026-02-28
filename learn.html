@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Code Learning</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  padding:30px 20px 80px;
+  background:#f0f7ff;
+  background-image: radial-gradient(#d1e5ff 1px, transparent 1px);
+  background-size:15px 15px;
+  font-family:'Prompt', sans-serif;
+  color:#1e3a8a;
+}
+
+h1{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:25px;
+}
+
+.section{
+  margin-bottom:35px;
+}
+
+.card{
+  background:rgba(255,255,255,0.95);
+  border:1px solid rgba(186,215,255,0.6);
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(30,58,138,0.08);
+}
+
+.code-title{
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+textarea{
+  width:100%;
+  height:130px;
+  background:#1e2a3d;
+  border:none;
+  border-radius:12px;
+  padding:12px;
+  resize:none;
+  outline:none;
+  color:#d6e1ff;
+  font-size:12px;
+  line-height:1.6;
+}
+
+/* กล่องคำอธิบาย */
+.explain-box{
+  background:#eff6ff;
+  border-left:3px solid #60a5fa;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:12px;
+  margin-top:12px;
+  margin-bottom:12px;
+  color:#334155;
+}
+
+.explain-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  font-weight:600;
+  font-size:12px;
+}
+
+.explain-content{
+  max-height:0;
+  overflow:hidden;
+  transition:0.3s ease;
+  margin-top:6px;
+}
+
+.explain-content.open{
+  max-height:300px;
+}
+
+.arrow{
+  transition:0.3s;
+}
+
+.arrow.rotate{
+  transform:rotate(180deg);
+}
+
+.demo-btn{
+  margin-top:10px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+  transition:0.15s;
+  transform:rotate(0deg);
+}
+
+.demo-btn:active{
+  transform:scale(0.95);
+}
+
+@keyframes shake{
+  0%{transform:translateX(0);}
+  25%{transform:translateX(-5px);}
+  50%{transform:translateX(5px);}
+  75%{transform:translateX(-5px);}
+  100%{transform:translateX(0);}
+}
+
+.reset-note{
+  font-size:11px;
+  margin-top:6px;
+  opacity:0.6;
+}
+</style>
+</head>
+
+<body>
+
+<h1>สอนเขียนโค้ดเบื้องต้น 🚀</h1>
+
+<!-- ตัวอย่าง 1 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 1: ปุ่มยุบตัวแล้วเด้งกลับ</div>
+
+<textarea readonly>
+this.style.transition = "0.1s";
+this.style.transform = "scale(0.9)";
+
+setTimeout(() => {
+  this.style.transform = "scale(1)";
+}, 100);
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        โค้ดนี้ใช้ scale() ย่อขนาดปุ่มลงชั่วคราว แล้วใช้ setTimeout
+        สั่งให้กลับมาขนาดเดิมใน 100ms ทำให้เกิดเอฟเฟกต์กดแล้วเด้ง
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="press(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 2 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 2: ปุ่มสั่นตอนกด</div>
+
+<textarea readonly>
+this.style.animation = "shake 0.3s";
+
+setTimeout(()=>{
+  this.style.animation = "";
+},300);
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ animation เรียก keyframes ชื่อ shake
+        ให้ปุ่มสั่น 0.3 วินาที
+        แล้วล้างค่าเพื่อให้กดซ้ำได้
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="shakeBtn(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 3 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 3: ปุ่มหมุน 360°</div>
+
+<textarea readonly>
+this.style.transition = "0.4s";
+this.style.transform = "rotate(360deg)";
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ transform: rotate()
+        หมุนปุ่มครบ 360 องศา
+        พร้อม transition เพื่อให้หมุนลื่น ๆ
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="rotateBtn(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 4 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 4: ปุ่มขยายใหญ่</div>
+
+<textarea readonly>
+this.style.transition = "0.2s";
+this.style.transform = "scale(1.2)";
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ scale(1.2) เพื่อขยายปุ่ม
+        transition ทำให้ขยายแบบนุ่ม ๆ
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="growBtn(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 5 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 5: ปุ่มกระโดด</div>
+
+<textarea readonly>
+this.style.transition = "0.2s";
+this.style.transform = "translateY(-10px)";
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        translateY(-10px) ทำให้ปุ่มขยับขึ้น
+        เหมือนกระโดดเล็ก ๆ
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="jumpBtn(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 6 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 6: ปุ่มเรืองแสง</div>
+
+<textarea readonly>
+this.style.boxShadow = "0 0 15px #3b82f6";
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        boxShadow เพิ่มเงาเรืองแสงรอบปุ่ม
+        ทำให้ดูเด่นขึ้นทันที
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="glowBtn(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 7 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 7: ปุ่มเปลี่ยนข้อความ</div>
+
+<textarea readonly>
+this.innerText = "กำลังโหลด...";
+
+setTimeout(() => {
+  this.innerText = "เสร็จแล้ว!";
+}, 1000);
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        innerText ใช้เปลี่ยนข้อความของปุ่มโดยตรง
+        จากนั้น setTimeout หน่วงเวลา 1 วินาที
+        แล้วเปลี่ยนข้อความใหม่อีกครั้ง
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="changeText(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 8 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 8: ปุ่มนับถอยหลัง</div>
+
+<textarea readonly>
+let count = 5;
+this.disabled = true;
+
+let timer = setInterval(()=>{
+  this.innerText = "รอ " + count + " วิ";
+  count--;
+
+  if(count < 0){
+    clearInterval(timer);
+    this.innerText = "กดเพื่อทดสอบ";
+    this.disabled = false;
+  }
+},1000);
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ setInterval นับถอยหลังทุก 1 วินาที
+        พร้อมปิดการกดปุ่มชั่วคราว (disabled)
+        เมื่อครบแล้วจะคืนค่าปุ่มกลับปกติ
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="countdown(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 9 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 9: ปุ่ม 3 สถานะ</div>
+
+<textarea readonly>
+state++;
+
+if(state == 1){
+  this.innerText = "กำลังโหลด...";
+}else if(state == 2){
+  this.innerText = "สำเร็จ!";
+}else{
+  this.innerText = "กดเพื่อไปต่อ";
+  state = 0;
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ตัวแปร state เก็บสถานะ
+        ปุ่มจะเปลี่ยนข้อความไปเรื่อย ๆ
+        ครบ 3 รอบจะรีเซ็ตกลับ
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="multiState(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 10 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 10: พิมพ์ข้อความทีละตัว</div>
+
+<textarea readonly>
+let text = "กำลังประมวลผลข้อมูล...";
+let i = 0;
+this.innerText = "";
+
+let typing = setInterval(()=>{
+  this.innerText += text[i];
+  i++;
+
+  if(i >= text.length){
+    clearInterval(typing);
+  }
+},80);
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ setInterval เพิ่มตัวอักษรทีละตัว
+        สร้างเอฟเฟกต์เหมือนพิมพ์ข้อความ
+        เมื่อครบความยาวข้อความจะหยุดเอง
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="typeEffect(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 11 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 11: ปุ่มสลับจาง/เข้ม</div>
+
+<textarea readonly>
+if(this.style.opacity == "0.5"){
+  this.style.opacity = "1";
+}else{
+  this.style.opacity = "0.5";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ if ตรวจสอบค่า opacity ปัจจุบัน
+        ถ้าโปร่งใส (0.5) ให้กลับมาเต็ม (1)
+        ถ้าเต็มอยู่แล้วให้ลดลงเป็น 0.5
+        เป็นตัวอย่างการสลับสถานะ (Toggle)
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleOpacity(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 12 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 12: ปุ่มสลับสีพื้นหลัง</div>
+
+<textarea readonly>
+if(this.style.backgroundColor == "rgb(220, 38, 38)"){
+  this.style.backgroundColor = "#2563eb";
+}else{
+  this.style.backgroundColor = "#dc2626";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ใช้ if ตรวจสอบสีพื้นหลังปัจจุบัน
+        ถ้าเป็นสีแดงจะเปลี่ยนเป็นสีน้ำเงิน
+        ถ้าไม่ใช่จะสลับกลับเป็นสีแดง
+        เป็นแนวคิด Toggle เหมือน opacity
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleColor(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 13 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 13: ปุ่มสลับตัวหนา</div>
+
+<textarea readonly>
+if(this.style.fontWeight == "700"){
+  this.style.fontWeight = "400";
+}else{
+  this.style.fontWeight = "700";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ตรวจสอบความหนาตัวอักษร
+        แล้วสลับระหว่างปกติ (400)
+        กับตัวหนา (700)
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleBold(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 14 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 14: ปุ่มสลับมุมเหลี่ยม/โค้ง</div>
+
+<textarea readonly>
+if(this.style.borderRadius == "0px"){
+  this.style.borderRadius = "12px";
+}else{
+  this.style.borderRadius = "0px";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ตรวจสอบค่า borderRadius ปัจจุบัน
+        ถ้าเป็น 0px (เหลี่ยม) จะเปลี่ยนเป็น 12px (โค้ง)
+        ถ้าโค้งอยู่แล้วจะสลับกลับเป็นเหลี่ยม
+        เป็นตัวอย่างการ Toggle ค่าหน่วย px
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleRadius(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 15 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 15: ปุ่มสลับเงา</div>
+
+<textarea readonly>
+if(this.style.boxShadow){
+  this.style.boxShadow = "";
+}else{
+  this.style.boxShadow = "0 0 15px #3b82f6";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ตรวจสอบว่าปุ่มมี boxShadow อยู่หรือไม่
+        ถ้ามีอยู่แล้วจะลบออก
+        ถ้าไม่มีจะเพิ่มเงาเข้าไป
+        เป็นการ Toggle ค่าแบบเช็คว่ามีค่าหรือไม่
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleShadow(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 16 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 16: ปุ่มสลับหมุน</div>
+
+<textarea readonly>
+if(this.style.transform == "rotate(180deg)"){
+  this.style.transform = "rotate(0deg)";
+}else{
+  this.style.transform = "rotate(180deg)";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ตรวจสอบค่า transform ปัจจุบัน
+        ถ้าหมุน 180deg อยู่จะกลับเป็น 0deg
+        ถ้ายังไม่หมุนจะหมุนครึ่งรอบ
+        เป็นการ Toggle ค่าองศา
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleRotate(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ตัวอย่าง 17 -->
+<div class="section">
+  <div class="card">
+    <div class="code-title">ตัวอย่าง 17: ปุ่มสลับขนาด</div>
+
+<textarea readonly>
+if(this.style.transform == "scale(1.3)"){
+  this.style.transform = "scale(1)";
+}else{
+  this.style.transform = "scale(1.3)";
+}
+</textarea>
+
+    <div class="explain-box">
+      <div class="explain-header" onclick="toggleExplain(this)">
+        อธิบายการทำงาน (สั้น ๆ)
+        <span class="arrow">▼</span>
+      </div>
+      <div class="explain-content">
+        ตรวจสอบค่า scale ปัจจุบัน
+        ถ้าขยายอยู่ (1.3) จะกลับเป็นขนาดปกติ (1)
+        ถ้าปกติอยู่จะขยายขึ้น
+        เป็นการ Toggle ค่าการย่อ/ขยาย
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="toggleScale(this)">กดเพื่อทดสอบ</button>
+    <div class="reset-note">หลังจาก 5 วิ ปุ่มจะกลับเป็นเหมือนเดิม</div>
+  </div>
+</div>
+
+<script>
+function toggleExplain(header){
+  const content = header.nextElementSibling;
+  const arrow = header.querySelector(".arrow");
+  content.classList.toggle("open");
+  arrow.classList.toggle("rotate");
+}
+
+function press(btn){
+  btn.style.transition = "0.1s";
+  btn.style.transform = "scale(0.9)";
+  setTimeout(()=>{
+    btn.style.transform = "scale(1)";
+  },100);
+}
+
+function changeText(btn){
+  btn.innerText = "กำลังโหลด...";
+  setTimeout(()=>{
+    btn.innerText = "เสร็จแล้ว!";
+  },1000);
+}
+
+function toggleOpacity(btn){
+  if(btn.style.opacity == "0.5"){
+    btn.style.opacity = "1";
+  }else{
+    btn.style.opacity = "0.5";
+  }
+  resetAfter5s(btn);
+}
+
+function shakeBtn(btn){
+  btn.style.animation = "shake 0.3s";
+  setTimeout(()=>{ btn.style.animation = ""; },300);
+}
+
+function rotateBtn(btn){
+  btn.style.transition = "transform 0.4s";
+  btn.style.transform = "rotate(360deg)";
+
+  setTimeout(()=>{
+    btn.style.transition = "none";
+    btn.style.transform = "rotate(0deg)";
+  },400);
+
+  resetAfter5s(btn);
+}
+
+function growBtn(btn){
+  btn.style.transition = "0.2s";
+  btn.style.transform = "scale(1.2)";
+  resetAfter5s(btn);
+}
+
+function jumpBtn(btn){
+  btn.style.transition = "0.2s";
+  btn.style.transform = "translateY(-10px)";
+  resetAfter5s(btn);
+}
+
+function glowBtn(btn){
+  btn.style.boxShadow = "0 0 15px #3b82f6";
+  resetAfter5s(btn);
+}
+
+function resetAfter5s(btn){
+  setTimeout(()=>{
+    btn.style.transition = "";
+    btn.style.transform = "";
+    btn.style.animation = "";
+    btn.style.boxShadow = "";
+    btn.style.opacity = "";
+    btn.innerText = "กดเพื่อทดสอบ";
+  },5000);
+}
+
+function countdown(btn){
+  let count = 5;
+  btn.disabled = true;
+
+  let timer = setInterval(()=>{
+    btn.innerText = "รอ " + count + " วิ";
+    count--;
+
+    if(count < 0){
+      clearInterval(timer);
+      btn.innerText = "กดเพื่อทดสอบ";
+      btn.disabled = false;
+    }
+  },1000);
+}
+
+let state = 0;
+function multiState(btn){
+  state++;
+
+  if(state == 1){
+    btn.innerText = "กำลังโหลด...";
+  }else if(state == 2){
+    btn.innerText = "สำเร็จ!";
+  }else{
+    btn.innerText = "กดเพื่อไปต่อ";
+    state = 0;
+  }
+}
+
+function typeEffect(btn){
+  let text = "กำลังประมวลผลข้อมูล...";
+  let i = 0;
+  btn.innerText = "";
+
+  let typing = setInterval(()=>{
+    btn.innerText += text[i];
+    i++;
+
+    if(i >= text.length){
+      clearInterval(typing);
+    }
+  },80);
+
+  resetAfter5s(btn);
+}
+
+function toggleColor(btn){
+  if(btn.style.backgroundColor == "rgb(220, 38, 38)"){
+    btn.style.backgroundColor = "#2563eb";
+  }else{
+    btn.style.backgroundColor = "#dc2626";
+  }
+  resetAfter5s(btn);
+}
+
+function toggleBold(btn){
+  if(btn.style.fontWeight == "700"){
+    btn.style.fontWeight = "400";
+  }else{
+    btn.style.fontWeight = "700";
+  }
+  resetAfter5s(btn);
+}
+
+function toggleRadius(btn){
+  if(btn.style.borderRadius == "0px"){
+    btn.style.borderRadius = "12px";
+  }else{
+    btn.style.borderRadius = "0px";
+  }
+  resetAfter5s(btn);
+}
+
+function toggleShadow(btn){
+  if(btn.style.boxShadow){
+    btn.style.boxShadow = "";
+  }else{
+    btn.style.boxShadow = "0 0 15px #3b82f6";
+  }
+  resetAfter5s(btn);
+}
+
+function toggleRotate(btn){
+  if(btn.style.transform == "rotate(180deg)"){
+    btn.style.transform = "rotate(0deg)";
+  }else{
+    btn.style.transform = "rotate(180deg)";
+  }
+  resetAfter5s(btn);
+}
+
+function toggleScale(btn){
+  if(btn.style.transform == "scale(1.3)"){
+    btn.style.transform = "scale(1)";
+  }else{
+    btn.style.transform = "scale(1.3)";
+  }
+  resetAfter5s(btn);
+}
+</script>
+
+</body>
+      </html>
